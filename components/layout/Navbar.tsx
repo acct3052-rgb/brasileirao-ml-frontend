@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { BarChart3 } from 'lucide-react'
 import { RetrainButton } from '@/components/admin/RetrainButton'
+import { SyncResultsButton } from '@/components/admin/SyncResultsButton'
 
 const links = [
   { href: '/', label: 'Dashboard' },
@@ -40,6 +41,7 @@ export function Navbar() {
             </Link>
           ))}
         </nav>
+        <SyncResultsButton />
         <RetrainButton />
       </div>
     </header>
