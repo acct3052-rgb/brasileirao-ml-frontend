@@ -131,10 +131,46 @@ export function RoundCoupon({ fixtures, marketOdds }: Props) {
 
               {/* Gols esperados */}
               {f.expected_goals_home != null && (
-                <div className="text-center text-xs text-muted-foreground">
-                  xG: {f.expected_goals_home?.toFixed(1)} – {f.expected_goals_away?.toFixed(1)}
-                  {' '}·{' '}
-                  Over 2.5: {f.over_25_prob != null ? Math.round(f.over_25_prob * 100) + '%' : '—'}
+                <div className="rounded-md bg-muted/40 px-3 py-2 space-y-1.5">
+                  {/* Placar esperado */}
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-xs text-muted-foreground truncate max-w-[80px] text-right">{f.home_team.split(' ')[0]}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-lg font-bold tabular-nums text-foreground">
+                        {f.expected_goals_home?.toFixed(1)}
+                      </span>
+                      <span className="text-muted-foreground text-sm">–</span>
+                      <span className="text-lg font-bold tabular-nums text-foreground">
+                        {f.expected_goals_away?.toFixed(1)}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground truncate max-w-[80px]">{f.away_team.split(' ')[0]}</span>
+                  </div>
+                  {/* Barra Over 2.5 */}
+                  {f.over_25_prob != null && (
+                    <div className="space-y-0.5">
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>Over 2.5</span>
+                        <span className={cn(
+                          'font-semibold',
+                          f.over_25_prob >= 0.55 ? 'text-emerald-400' :
+                          f.over_25_prob >= 0.40 ? 'text-amber-400' : 'text-muted-foreground'
+                        )}>
+                          {Math.round(f.over_25_prob * 100)}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={cn(
+                            'h-full rounded-full transition-all',
+                            f.over_25_prob >= 0.55 ? 'bg-emerald-500' :
+                            f.over_25_prob >= 0.40 ? 'bg-amber-500' : 'bg-muted-foreground/40'
+                          )}
+                          style={{ width: `${Math.round(f.over_25_prob * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
