@@ -111,9 +111,52 @@ export function FixturesWithLineups({ fixtures }: Props) {
               </span>
             </div>
 
-            {/* Painel expandido: lesões + escalação */}
+            {/* Painel expandido */}
             {isExpanded && (
-              <div className="px-4 pb-3 bg-muted/10">
+              <div className="px-4 pb-4 pt-2 bg-muted/10 space-y-3">
+                {/* Probabilidades detalhadas */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: f.home_team, prob: f.prob_home, outcome: 'H' },
+                    { label: 'Empate', prob: f.prob_draw, outcome: 'D' },
+                    { label: f.away_team, prob: f.prob_away, outcome: 'A' },
+                  ].map(({ label, prob, outcome }) => (
+                    <div key={outcome} className={cn(
+                      'rounded-lg border p-3 text-center space-y-1',
+                      f.predicted_result === outcome
+                        ? 'border-blue-500/30 bg-blue-500/5'
+                        : 'border-border bg-card'
+                    )}>
+                      <div className="text-[11px] text-muted-foreground truncate">{label}</div>
+                      <div className="text-xl font-bold tabular-nums">
+                        {Math.round(prob * 100)}%
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        odd justa: {prob > 0 ? (1 / prob).toFixed(2) : '—'}
+                      </div>
+                      {f.predicted_result === outcome && (
+                        <div className="text-[10px] text-blue-400">▲ modelo</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Gols e Over */}
+                <div className="flex gap-4 flex-wrap text-sm text-muted-foreground">
+                  <span>xG: <strong className="text-foreground">{f.expected_goals_home?.toFixed(1)} – {f.expected_goals_away?.toFixed(1)}</strong></span>
+                  {f.over_15_prob != null && (
+                    <span>Over 1.5: <strong className={cn(
+                      f.over_15_prob >= 0.72 ? 'text-emerald-400' :
+                      f.over_15_prob >= 0.55 ? 'text-amber-400' : 'text-foreground'
+                    )}>{Math.round(f.over_15_prob * 100)}%</strong></span>
+                  )}
+                  <span>Over 2.5: <strong className={cn(
+                    f.over_25_prob >= 0.55 ? 'text-emerald-400' :
+                    f.over_25_prob >= 0.40 ? 'text-amber-400' : 'text-foreground'
+                  )}>{Math.round(f.over_25_prob * 100)}%</strong></span>
+                </div>
+
+                {/* Lesões (só se API_FOOTBALL_KEY configurada) */}
                 <LineupCard
                   matchId={f.match_id}
                   homeTeam={f.home_team}
