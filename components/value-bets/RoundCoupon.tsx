@@ -117,12 +117,22 @@ export function RoundCoupon({ fixtures, marketOdds }: Props) {
 
           const calTier = getCalibrationTier(f.confidence)
 
+          // Aposta de ouro: tier Alta/Elite + EV positivo no resultado previsto
+          const predictedOdd = odds[predicted]
+          const predictedProb = probs[predicted]
+          const predictedEv = predictedOdd !== null ? calcEv(predictedProb, predictedOdd) : null
+          const isGoldenBet =
+            (calTier.highlight === 'hot' || calTier.highlight === 'good') &&
+            predictedEv !== null && predictedEv > 0
+
           return (
             <div
               key={f.match_id}
               className={cn(
-                'rounded-lg border bg-card p-3 space-y-2',
-                calTier.highlight === 'hot'
+                'rounded-lg border bg-card p-3 space-y-2 transition-all',
+                isGoldenBet
+                  ? 'border-yellow-400/60 bg-yellow-400/5 shadow-[0_0_16px_rgba(250,204,21,0.20)]'
+                  : calTier.highlight === 'hot'
                   ? 'border-emerald-500/40 bg-emerald-500/5'
                   : 'border-border'
               )}
@@ -131,6 +141,11 @@ export function RoundCoupon({ fixtures, marketOdds }: Props) {
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">{formatDate(f.match_date)}</span>
                 <div className="flex items-center gap-2">
+                  {isGoldenBet && (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border bg-yellow-400/20 border-yellow-400/50 text-yellow-300 animate-pulse">
+                      ⭐ Ouro
+                    </span>
+                  )}
                   <HotBadge confidence={f.confidence} over15Prob={f.over_15_prob} />
                   <span className="text-xs text-muted-foreground">Rd {f.matchday}</span>
                 </div>
