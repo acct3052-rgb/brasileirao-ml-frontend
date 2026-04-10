@@ -133,18 +133,16 @@ export function RoundCoupon({ fixtures, marketOdds }: Props) {
               {f.expected_goals_home != null && (
                 <div className="rounded-md bg-muted/40 px-3 py-2 space-y-1.5">
                   {/* Placar esperado */}
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-xs text-muted-foreground truncate max-w-[80px] text-right">{f.home_team.split(' ')[0]}</span>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-lg font-bold tabular-nums text-foreground">
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold tabular-nums text-foreground">
                         {f.expected_goals_home?.toFixed(1)}
                       </span>
-                      <span className="text-muted-foreground text-sm">–</span>
-                      <span className="text-lg font-bold tabular-nums text-foreground">
+                      <span className="text-muted-foreground text-lg">–</span>
+                      <span className="text-2xl font-bold tabular-nums text-foreground">
                         {f.expected_goals_away?.toFixed(1)}
                       </span>
                     </div>
-                    <span className="text-xs text-muted-foreground truncate max-w-[80px]">{f.away_team.split(' ')[0]}</span>
                   </div>
                   {/* Barras Over 1.5 e Over 2.5 */}
                   {(() => {
