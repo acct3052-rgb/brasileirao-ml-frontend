@@ -146,31 +146,41 @@ export function RoundCoupon({ fixtures, marketOdds }: Props) {
                     </div>
                     <span className="text-xs text-muted-foreground truncate max-w-[80px]">{f.away_team.split(' ')[0]}</span>
                   </div>
-                  {/* Barra Over 2.5 */}
-                  {f.over_25_prob != null && (
-                    <div className="space-y-0.5">
-                      <div className="flex justify-between text-[10px] text-muted-foreground">
-                        <span>Over 2.5</span>
-                        <span className={cn(
-                          'font-semibold',
-                          f.over_25_prob >= 0.55 ? 'text-emerald-400' :
-                          f.over_25_prob >= 0.40 ? 'text-amber-400' : 'text-muted-foreground'
-                        )}>
-                          {Math.round(f.over_25_prob * 100)}%
-                        </span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div
-                          className={cn(
-                            'h-full rounded-full transition-all',
-                            f.over_25_prob >= 0.55 ? 'bg-emerald-500' :
-                            f.over_25_prob >= 0.40 ? 'bg-amber-500' : 'bg-muted-foreground/40'
-                          )}
-                          style={{ width: `${Math.round(f.over_25_prob * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
+                  {/* Barras Over 1.5 e Over 2.5 */}
+                  {(() => {
+                    const over15 = f.over_15_prob ?? null
+                    const over25 = f.over_25_prob ?? null
+                    const bars = [
+                      { label: 'Over 1.5', prob: over15, hi: 0.72, mid: 0.55 },
+                      { label: 'Over 2.5', prob: over25, hi: 0.55, mid: 0.40 },
+                    ]
+                    return bars.map(({ label, prob, hi, mid }) =>
+                      prob != null ? (
+                        <div key={label} className="space-y-0.5">
+                          <div className="flex justify-between text-[10px] text-muted-foreground">
+                            <span>{label}</span>
+                            <span className={cn(
+                              'font-semibold',
+                              prob >= hi ? 'text-emerald-400' :
+                              prob >= mid ? 'text-amber-400' : 'text-muted-foreground'
+                            )}>
+                              {Math.round(prob * 100)}%
+                            </span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className={cn(
+                                'h-full rounded-full transition-all',
+                                prob >= hi ? 'bg-emerald-500' :
+                                prob >= mid ? 'bg-amber-500' : 'bg-muted-foreground/40'
+                              )}
+                              style={{ width: `${Math.round(prob * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      ) : null
+                    )
+                  })()}
                 </div>
               )}
 

@@ -15,6 +15,7 @@ export interface Fixture {
   expected_total_goals: number
   expected_goals_home?: number
   expected_goals_away?: number
+  over_15_prob?: number
   over_25_prob: number
 }
 
