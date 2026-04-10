@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { HotBadge } from '@/components/ui/HotBadge'
 import { ProbabilityBar } from './ProbabilityBar'
 import { LineupCard } from './LineupCard'
 import type { Fixture } from '@/types/api'
 import { confidenceLevel, formatDate, resultLabel } from '@/lib/utils'
+import { getCalibrationTier } from '@/lib/calibration'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 
@@ -50,8 +52,11 @@ export function FixturesWithLineups({ fixtures }: Props) {
           <div key={f.match_id}>
             {/* Linha principal */}
             <div
-              className="grid items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer"
-              style={{ gridTemplateColumns: '2rem 6rem 1fr 1fr 180px 5rem 5rem 5rem 5rem 1.5rem' }}
+              className={cn(
+                'grid items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer',
+                getCalibrationTier(f.confidence).highlight === 'hot' && 'bg-emerald-500/5'
+              )}
+              style={{ gridTemplateColumns: '2rem 6rem 1fr 1fr 180px 5rem 5rem 5rem 5rem auto 1.5rem' }}
               onClick={() => toggle(f.match_id)}
             >
               {/* Rodada */}
@@ -105,6 +110,9 @@ export function FixturesWithLineups({ fixtures }: Props) {
                 {level}
               </Badge>
 
+              {/* Hot badge */}
+              <HotBadge confidence={f.confidence} over15Prob={f.over_15_prob} />
+
               {/* Expand icon */}
               <span className="text-muted-foreground">
                 {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -113,7 +121,12 @@ export function FixturesWithLineups({ fixtures }: Props) {
 
             {/* Painel expandido */}
             {isExpanded && (
-              <div className="px-4 pb-4 pt-2 bg-muted/10 space-y-3">
+              <div className={cn(
+                'px-4 pb-4 pt-2 space-y-3',
+                getCalibrationTier(f.confidence).highlight === 'hot'
+                  ? 'bg-emerald-500/5'
+                  : 'bg-muted/10'
+              )}>
                 {/* Probabilidades detalhadas */}
                 <div className="grid grid-cols-3 gap-2">
                   {[
@@ -155,6 +168,24 @@ export function FixturesWithLineups({ fixtures }: Props) {
                     f.over_25_prob >= 0.40 ? 'text-amber-400' : 'text-foreground'
                   )}>{Math.round(f.over_25_prob * 100)}%</strong></span>
                 </div>
+
+                {/* Calibração */}
+                {(() => {
+                  const tier = getCalibrationTier(f.confidence)
+                  if (tier.highlight === 'weak' || tier.highlight === 'normal') return null
+                  return (
+                    <div className={cn(
+                      'flex items-center gap-2 rounded-lg border px-3 py-2 text-xs',
+                      tier.highlight === 'hot'
+                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                        : 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400'
+                    )}>
+                      <span className="font-bold">{tier.highlight === 'hot' ? '🔥' : '✓'} {tier.label}</span>
+                      <span className="opacity-75">·</span>
+                      <span>{Math.round(tier.actualAccuracy * 100)}% de acerto histórico nessa faixa de confiança ({tier.description})</span>
+                    </div>
+                  )
+                })()}
 
                 {/* Lesões (só se API_FOOTBALL_KEY configurada) */}
                 <LineupCard

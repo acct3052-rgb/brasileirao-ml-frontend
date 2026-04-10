@@ -7,6 +7,8 @@ import type { Fixture } from '@/types/api'
 import type { MarketOdds } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { HotBadge } from '@/components/ui/HotBadge'
+import { getCalibrationTier } from '@/lib/calibration'
 
 interface Props {
   fixtures: Fixture[]
@@ -113,15 +115,25 @@ export function RoundCoupon({ fixtures, marketOdds }: Props) {
           }
           const predicted = f.predicted_result as 'H' | 'D' | 'A'
 
+          const calTier = getCalibrationTier(f.confidence)
+
           return (
             <div
               key={f.match_id}
-              className="rounded-lg border border-border bg-card p-3 space-y-2"
+              className={cn(
+                'rounded-lg border bg-card p-3 space-y-2',
+                calTier.highlight === 'hot'
+                  ? 'border-emerald-500/40 bg-emerald-500/5'
+                  : 'border-border'
+              )}
             >
               {/* Header */}
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">{formatDate(f.match_date)}</span>
-                <span className="text-xs text-muted-foreground">Rd {f.matchday}</span>
+                <div className="flex items-center gap-2">
+                  <HotBadge confidence={f.confidence} over15Prob={f.over_15_prob} />
+                  <span className="text-xs text-muted-foreground">Rd {f.matchday}</span>
+                </div>
               </div>
 
               {/* Times */}
