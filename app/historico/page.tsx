@@ -4,6 +4,7 @@ import { AccuracyChart } from '@/components/historico/AccuracyChart'
 import { AccuracyByResultCards } from '@/components/historico/AccuracyByResultCards'
 import { PredictionsTable } from '@/components/historico/PredictionsTable'
 import { HistoricoFilters } from '@/components/historico/HistoricoFilters'
+import { RoundAccuracy } from '@/components/historico/RoundAccuracy'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ApiOfflineBanner } from '@/components/layout/ApiOfflineBanner'
@@ -35,6 +36,16 @@ async function HistoricoContent({ season }: { season?: string }) {
 
       {/* Cards acurácia por tipo */}
       <AccuracyByResultCards predictions={withResult} />
+
+      {/* Acurácia por rodada */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Acertos por Rodada</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RoundAccuracy />
+        </CardContent>
+      </Card>
 
       {/* Gráfico */}
       <Card className="mt-6">
