@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { Fixture } from '@/types/api'
@@ -61,6 +61,11 @@ export function RoundCoupon({ fixtures, marketOdds }: Props) {
   const rounds = Array.from(new Set(fixtures.map((f) => f.matchday))).sort((a, b) => a - b)
   const [selectedRound, setSelectedRound] = useState<number>(rounds[0] ?? 1)
   const [bankroll, setBankroll] = useState<number>(1000)
+  // odd Over 1.5 inserida pelo usuário por jogo: matchId → odd
+  const [over15Odds, setOver15Odds] = useState<Record<number, string>>({})
+  const setOver15Odd = useCallback((matchId: number, val: string) => {
+    setOver15Odds((prev) => ({ ...prev, [matchId]: val }))
+  }, [])
 
   const roundFixtures = fixtures.filter((f) => f.matchday === selectedRound)
 
@@ -156,56 +161,143 @@ export function RoundCoupon({ fixtures, marketOdds }: Props) {
                 {f.home_team} <span className="text-muted-foreground font-normal">vs</span> {f.away_team}
               </div>
 
-              {/* Gols esperados */}
+              {/* Gols esperados + mercado Over */}
               {f.expected_goals_home != null && (
-                <div className="rounded-md bg-muted/40 px-3 py-2 space-y-1.5">
-                  {/* Placar esperado */}
-                  <div className="flex items-center justify-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold tabular-nums text-foreground">
-                        {f.expected_goals_home?.toFixed(1)}
-                      </span>
-                      <span className="text-muted-foreground text-lg">–</span>
-                      <span className="text-2xl font-bold tabular-nums text-foreground">
-                        {f.expected_goals_away?.toFixed(1)}
-                      </span>
-                    </div>
+                <div className="space-y-2">
+                  {/* xG placar */}
+                  <div className="rounded-md bg-muted/40 px-3 py-2 flex items-center justify-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">xG</span>
+                    <span className="text-2xl font-bold tabular-nums">{f.expected_goals_home?.toFixed(1)}</span>
+                    <span className="text-muted-foreground">–</span>
+                    <span className="text-2xl font-bold tabular-nums">{f.expected_goals_away?.toFixed(1)}</span>
                   </div>
-                  {/* Barras Over 1.5 e Over 2.5 */}
-                  {(() => {
-                    const over15 = f.over_15_prob ?? null
-                    const over25 = f.over_25_prob ?? null
-                    const bars = [
-                      { label: 'Over 1.5', prob: over15, hi: 0.72, mid: 0.55 },
-                      { label: 'Over 2.5', prob: over25, hi: 0.55, mid: 0.40 },
-                    ]
-                    return bars.map(({ label, prob, hi, mid }) =>
-                      prob != null ? (
-                        <div key={label} className="space-y-0.5">
-                          <div className="flex justify-between text-[10px] text-muted-foreground">
-                            <span>{label}</span>
-                            <span className={cn(
-                              'font-semibold',
-                              prob >= hi ? 'text-emerald-400' :
-                              prob >= mid ? 'text-amber-400' : 'text-muted-foreground'
-                            )}>
-                              {Math.round(prob * 100)}%
-                            </span>
+
+                  {/* Cards Over 1.5 e Over 2.5 */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Over 1.5 — odd inserida pelo usuário */}
+                    {(() => {
+                      const prob = f.over_15_prob ?? null
+                      if (!prob) return null
+                      const fairOdd = parseFloat((1 / prob).toFixed(2))
+                      const userOddStr = over15Odds[f.match_id] ?? ''
+                      const userOdd = parseFloat(userOddStr)
+                      const ev = !isNaN(userOdd) && userOdd > 0 ? calcEv(prob, userOdd) : null
+                      const kelly = ev !== null && ev > 0 ? calcKelly(prob, userOdd) : null
+                      const isValue = ev !== null && ev > 0
+                      const isGoldenGoal = isValue && prob >= 0.72
+
+                      return (
+                        <div className={cn(
+                          'rounded-lg border p-2.5 space-y-1.5',
+                          isGoldenGoal ? 'border-yellow-400/60 bg-yellow-400/5' :
+                          isValue ? 'border-emerald-500/30 bg-emerald-500/5' :
+                          'border-border bg-card'
+                        )}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-semibold text-muted-foreground">Over 1.5</span>
+                            {isGoldenGoal && <span className="text-[9px] text-yellow-300 animate-pulse font-bold">⭐ Ouro</span>}
+                            {isValue && !isGoldenGoal && <span className="text-[9px] text-emerald-400 font-bold">✓ EV+</span>}
                           </div>
-                          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div
-                              className={cn(
-                                'h-full rounded-full transition-all',
-                                prob >= hi ? 'bg-emerald-500' :
-                                prob >= mid ? 'bg-amber-500' : 'bg-muted-foreground/40'
-                              )}
-                              style={{ width: `${Math.round(prob * 100)}%` }}
+                          <div className="flex items-center justify-between">
+                            <span className={cn(
+                              'text-lg font-bold tabular-nums',
+                              prob >= 0.72 ? 'text-emerald-400' :
+                              prob >= 0.55 ? 'text-amber-400' : 'text-foreground'
+                            )}>{Math.round(prob * 100)}%</span>
+                            <div className="text-right">
+                              <div className="text-[10px] text-muted-foreground">odd justa</div>
+                              <div className="text-sm font-bold tabular-nums">{fairOdd}</div>
+                            </div>
+                          </div>
+                          {/* Campo para usuário digitar odd da casa */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">Odd casa:</span>
+                            <input
+                              type="number"
+                              min="1"
+                              step="0.05"
+                              placeholder="ex: 1.35"
+                              value={userOddStr}
+                              onChange={(e) => setOver15Odd(f.match_id, e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex-1 h-6 rounded border border-input bg-transparent px-1.5 text-center text-xs focus:outline-none focus:ring-1 focus:ring-ring"
                             />
                           </div>
+                          {ev !== null && (
+                            <div className="flex items-center justify-between text-[10px]">
+                              <span className={cn('font-bold', isValue ? 'text-emerald-400' : 'text-red-400')}>
+                                EV {(ev * 100).toFixed(1)}%
+                              </span>
+                              {kelly !== null && kelly > 0 && (
+                                <span className="text-amber-400">R$ {(bankroll * kelly).toFixed(0)}</span>
+                              )}
+                            </div>
+                          )}
                         </div>
-                      ) : null
-                    )
-                  })()}
+                      )
+                    })()}
+
+                    {/* Over 2.5 — odd real da API */}
+                    {(() => {
+                      const prob = f.over_25_prob ?? null
+                      if (!prob) return null
+                      const fairOdd = parseFloat((1 / prob).toFixed(2))
+                      const marketOdd = market?.odd_over25_market ?? null
+                      const bk = market?.best_over25_bk ?? null
+                      const ev = marketOdd !== null ? calcEv(prob, marketOdd) : null
+                      const kelly = ev !== null && ev > 0 && marketOdd !== null ? calcKelly(prob, marketOdd) : null
+                      const isValue = ev !== null && ev > 0
+                      const isGoldenGoal = isValue && prob >= 0.55
+
+                      return (
+                        <div className={cn(
+                          'rounded-lg border p-2.5 space-y-1.5',
+                          isGoldenGoal ? 'border-yellow-400/60 bg-yellow-400/5' :
+                          isValue ? 'border-emerald-500/30 bg-emerald-500/5' :
+                          'border-border bg-card'
+                        )}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-semibold text-muted-foreground">Over 2.5</span>
+                            {isGoldenGoal && <span className="text-[9px] text-yellow-300 animate-pulse font-bold">⭐ Ouro</span>}
+                            {isValue && !isGoldenGoal && <span className="text-[9px] text-emerald-400 font-bold">✓ EV+</span>}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className={cn(
+                              'text-lg font-bold tabular-nums',
+                              prob >= 0.55 ? 'text-emerald-400' :
+                              prob >= 0.40 ? 'text-amber-400' : 'text-foreground'
+                            )}>{Math.round(prob * 100)}%</span>
+                            <div className="text-right">
+                              <div className="text-[10px] text-muted-foreground">odd justa</div>
+                              <div className="text-sm font-bold tabular-nums">{fairOdd}</div>
+                            </div>
+                          </div>
+                          {marketOdd !== null ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between text-[10px]">
+                                <span className="text-muted-foreground">{bk ? (BOOKMAKER_LABELS[bk] ?? bk) : 'Mercado'}</span>
+                                <span className={cn('font-bold text-sm tabular-nums', isValue ? 'text-emerald-400' : 'text-foreground')}>
+                                  {marketOdd.toFixed(2)}
+                                </span>
+                              </div>
+                              {ev !== null && (
+                                <div className="flex items-center justify-between text-[10px]">
+                                  <span className={cn('font-bold', isValue ? 'text-emerald-400' : 'text-red-400')}>
+                                    EV {(ev * 100).toFixed(1)}%
+                                  </span>
+                                  {kelly !== null && kelly > 0 && (
+                                    <span className="text-amber-400">R$ {(bankroll * kelly).toFixed(0)}</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-muted-foreground">sem odd de mercado</div>
+                          )}
+                        </div>
+                      )
+                    })()}
+                  </div>
                 </div>
               )}
 
