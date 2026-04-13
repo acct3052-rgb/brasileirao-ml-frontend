@@ -42,9 +42,16 @@ export function FixturesWithLineups({ fixtures }: Props) {
     )
   }
 
+  // Ordena por score de oportunidade: confiança (60%) + over_15_prob (40%)
+  const sorted = [...fixtures].sort((a, b) => {
+    const scoreA = (a.confidence ?? 0) * 0.6 + (a.over_15_prob ?? 0) * 0.4
+    const scoreB = (b.confidence ?? 0) * 0.6 + (b.over_15_prob ?? 0) * 0.4
+    return scoreB - scoreA
+  })
+
   return (
     <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
-      {fixtures.map((f) => {
+      {sorted.map((f) => {
         const level = confidenceLevel(f.confidence)
         const result = resultLabel(f.predicted_result)
         const isExpanded = expanded.has(f.match_id)
