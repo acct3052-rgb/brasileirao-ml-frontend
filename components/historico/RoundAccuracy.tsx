@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
@@ -15,6 +16,20 @@ interface RoundStat {
   avg_confidence: number
   round_date: string
 }
+
+interface GameDetail {
+  home_team: string
+  away_team: string
+  match_date: string
+  predicted_result: string
+  actual_result: string | null
+  home_goals: number | null
+  away_goals: number | null
+  confidence: number
+  correct: boolean
+}
+
+const RESULT_LABEL: Record<string, string> = { H: 'Casa', D: 'Empate', A: 'Visitante' }
 
 function AccuracyBar({ pct }: { pct: number }) {
   return (
@@ -40,10 +55,97 @@ function AccuracyBar({ pct }: { pct: number }) {
   )
 }
 
+function RoundDetail({ season, matchday }: { season: number; matchday: number }) {
+  const [games, setGames] = useState<GameDetail[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/accuracy/by-round/${season}/${matchday}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setGames(d.games) })
+      .finally(() => setLoading(false))
+  }, [season, matchday])
+
+  if (loading) return (
+    <div className="px-4 py-3 space-y-2">
+      {[...Array(5)].map((_, i) => <div key={i} className="h-8 rounded bg-muted/30 animate-pulse" />)}
+    </div>
+  )
+
+  if (games.length === 0) return (
+    <div className="px-4 py-3 text-sm text-muted-foreground">Sem detalhes disponíveis.</div>
+  )
+
+  return (
+    <div className="divide-y divide-border bg-muted/5">
+      {games.map((g, i) => {
+        const score = g.home_goals != null ? `${g.home_goals}–${g.away_goals}` : null
+        const conf = g.confidence ? Math.round(g.confidence * 100) : null
+        const tier = conf != null
+          ? conf >= 70 ? 'Elite' : conf >= 60 ? 'Alta' : conf >= 50 ? 'Média' : 'Baixa'
+          : null
+
+        return (
+          <div key={i} className={cn(
+            'flex items-center gap-3 px-6 py-2.5 text-sm',
+            g.correct ? 'bg-emerald-500/3' : 'bg-red-500/3'
+          )}>
+            {/* Resultado acerto/erro */}
+            <span className={cn(
+              'text-base font-bold w-5 text-center flex-shrink-0',
+              g.correct ? 'text-emerald-400' : 'text-red-400'
+            )}>
+              {g.correct ? '✓' : '✗'}
+            </span>
+
+            {/* Times */}
+            <span className={cn('flex-1 truncate', g.predicted_result === 'H' && g.correct && 'text-emerald-400')}>
+              {g.home_team}
+            </span>
+            <span className="text-muted-foreground text-xs">vs</span>
+            <span className={cn('flex-1 truncate', g.predicted_result === 'A' && g.correct && 'text-emerald-400')}>
+              {g.away_team}
+            </span>
+
+            {/* Placar real */}
+            <span className="tabular-nums font-bold text-center w-12 flex-shrink-0">
+              {score ?? '—'}
+            </span>
+
+            {/* Previsto → Real */}
+            <span className="text-xs text-muted-foreground w-28 text-center flex-shrink-0">
+              prev: <span className={cn('font-semibold', g.correct ? 'text-emerald-400' : 'text-red-400')}>
+                {RESULT_LABEL[g.predicted_result] ?? g.predicted_result}
+              </span>
+              {g.actual_result && g.actual_result !== g.predicted_result && (
+                <> → <span className="text-foreground">{RESULT_LABEL[g.actual_result]}</span></>
+              )}
+            </span>
+
+            {/* Confiança / tier */}
+            {tier && (
+              <span className={cn(
+                'text-[10px] px-1.5 py-0.5 rounded border flex-shrink-0',
+                tier === 'Elite' ? 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10' :
+                tier === 'Alta'  ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/5' :
+                tier === 'Média' ? 'text-amber-400 border-amber-500/20' :
+                'text-muted-foreground border-border'
+              )}>
+                {tier} {conf}%
+              </span>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function RoundAccuracy() {
   const [rounds, setRounds] = useState<RoundStat[]>([])
   const [loading, setLoading] = useState(true)
   const [season, setSeason] = useState<number | 'all'>('all')
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     setLoading(true)
@@ -56,10 +158,18 @@ export function RoundAccuracy() {
       .finally(() => setLoading(false))
   }, [season])
 
+  const toggle = (key: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
   const seasons = Array.from(new Set(rounds.map(r => r.season))).sort((a, b) => b - a)
   const filtered = season === 'all' ? rounds : rounds.filter(r => r.season === season)
 
-  // Totais gerais
   const totalJogos = filtered.reduce((s, r) => s + r.total, 0)
   const totalAcertos = filtered.reduce((s, r) => s + r.correct, 0)
   const avgAcc = totalJogos > 0 ? (totalAcertos / totalJogos) * 100 : 0
@@ -129,10 +239,11 @@ export function RoundAccuracy() {
       </div>
 
       {/* Tabela por rodada */}
-      <div className="rounded-lg border border-border overflow-hidden">
+      <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
+              <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground w-8"></th>
               <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground">Temporada</th>
               <th className="text-center px-4 py-2 text-xs font-medium text-muted-foreground">Rodada</th>
               <th className="text-center px-4 py-2 text-xs font-medium text-muted-foreground">Acertos</th>
@@ -141,23 +252,42 @@ export function RoundAccuracy() {
               <th className="text-center px-4 py-2 text-xs font-medium text-muted-foreground">Confiança</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
-            {filtered.map(r => (
-              <tr key={`${r.season}-${r.matchday}`} className="hover:bg-muted/20 transition-colors">
-                <td className="px-4 py-2.5 text-muted-foreground">{r.season}</td>
-                <td className="px-4 py-2.5 text-center font-medium">Rd {r.matchday}</td>
-                <td className="px-4 py-2.5 text-center text-emerald-400 font-semibold">{r.correct}</td>
-                <td className="px-4 py-2.5 text-center text-red-400">{r.wrong}</td>
-                <td className="px-4 py-2.5 min-w-[140px]">
-                  <AccuracyBar pct={r.accuracy_pct} />
-                </td>
-                <td className="px-4 py-2.5 text-center text-muted-foreground text-xs">
-                  {(r.avg_confidence * 100).toFixed(0)}%
-                </td>
-              </tr>
-            ))}
-          </tbody>
         </table>
+
+        {filtered.map(r => {
+          const key = `${r.season}-${r.matchday}`
+          const isOpen = expanded.has(key)
+          return (
+            <div key={key}>
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr
+                    className="hover:bg-muted/20 transition-colors cursor-pointer"
+                    onClick={() => toggle(key)}
+                  >
+                    <td className="px-4 py-2.5 w-8 text-muted-foreground">
+                      {isOpen
+                        ? <ChevronDown className="w-3.5 h-3.5" />
+                        : <ChevronRight className="w-3.5 h-3.5" />}
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{r.season}</td>
+                    <td className="px-4 py-2.5 text-center font-medium">Rd {r.matchday}</td>
+                    <td className="px-4 py-2.5 text-center text-emerald-400 font-semibold">{r.correct}</td>
+                    <td className="px-4 py-2.5 text-center text-red-400">{r.wrong}</td>
+                    <td className="px-4 py-2.5 min-w-[140px]">
+                      <AccuracyBar pct={r.accuracy_pct} />
+                    </td>
+                    <td className="px-4 py-2.5 text-center text-muted-foreground text-xs">
+                      {(r.avg_confidence * 100).toFixed(0)}%
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {isOpen && <RoundDetail season={r.season} matchday={r.matchday} />}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
