@@ -42,8 +42,9 @@ export function FixturesWithLineups({ fixtures }: Props) {
     )
   }
 
-  // Ordena por score de oportunidade: confiança (60%) + over_15_prob (40%)
+  // Ordena por rodada primeiro, depois por oportunidade dentro de cada rodada
   const sorted = [...fixtures].sort((a, b) => {
+    if (a.matchday !== b.matchday) return a.matchday - b.matchday
     const scoreA = (a.confidence ?? 0) * 0.6 + (a.over_15_prob ?? 0) * 0.4
     const scoreB = (b.confidence ?? 0) * 0.6 + (b.over_15_prob ?? 0) * 0.4
     return scoreB - scoreA
