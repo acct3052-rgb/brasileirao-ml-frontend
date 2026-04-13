@@ -10,6 +10,7 @@ import { confidenceLevel, formatDate, resultLabel } from '@/lib/utils'
 import { getCalibrationTier } from '@/lib/calibration'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ChevronRight } from 'lucide-react'
+import { GoalsLines } from './GoalsLines'
 
 interface Props {
   fixtures: Fixture[]
@@ -186,6 +187,9 @@ export function FixturesWithLineups({ fixtures }: Props) {
                     </div>
                   )
                 })()}
+
+                {/* Linhas de gols */}
+                <GoalsLines matchId={f.match_id} />
 
                 {/* Lesões (só se API_FOOTBALL_KEY configurada) */}
                 <LineupCard
