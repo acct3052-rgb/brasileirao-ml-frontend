@@ -9,8 +9,10 @@ interface Message {
   text: string
 }
 
+const DEFAULT_QUESTION = 'Quais são as apostas Elite com EV positivo para a próxima rodada?'
+
 const SUGGESTIONS = [
-  'Qual a melhor aposta de hoje?',
+  DEFAULT_QUESTION,
   'Tem jogo ⭐ Ouro essa rodada?',
   'Como foi a precisão recente?',
   'Qual Over 1.5 mais confiante?',
@@ -30,6 +32,7 @@ export function ChatWidget() {
     if (open) {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
       inputRef.current?.focus()
+      if (messages.length === 1 && !input) setInput(DEFAULT_QUESTION)
     }
   }, [open, messages])
 

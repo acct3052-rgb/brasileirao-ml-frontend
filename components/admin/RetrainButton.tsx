@@ -6,8 +6,10 @@ import { startRetrain, getRetrainStatus } from '@/lib/api'
 import { RefreshCw, CheckCircle, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN ?? ''
+
 export function RetrainButton() {
-  const [token, setToken] = useState('')
+  const [token, setToken] = useState(ADMIN_TOKEN)
   const [showInput, setShowInput] = useState(false)
   const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -40,6 +42,7 @@ export function RetrainButton() {
 
   const handleRetrain = async () => {
     if (!token) { setShowInput(true); return }
+    setShowInput(false)
     setStatus('running')
     setErrorMsg(null)
     const res = await startRetrain(token)
