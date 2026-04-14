@@ -14,7 +14,23 @@ interface Props {
   bets: Bet[]
 }
 
-const OUTCOME_LABELS = { H: 'Casa', D: 'Empate', A: 'Visitante' } as const
+const OUTCOME_LABELS: Record<string, string> = {
+  H: 'Casa',
+  D: 'Empate',
+  A: 'Visitante',
+  over_15: 'Over 1.5',
+  over_25: 'Over 2.5',
+  btts: 'Ambos marcam',
+  combo: 'Múltipla',
+}
+
+const MARKET_LABELS: Record<string, string> = {
+  result: '1X2',
+  over_15: 'Over 1.5',
+  over_25: 'Over 2.5',
+  btts: 'BTTS',
+  combo: 'Múltipla',
+}
 
 const statusStyle = {
   pending: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
@@ -46,7 +62,8 @@ export function BetsTable({ bets }: Props) {
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead>Data</TableHead>
-            <TableHead>Jogo</TableHead>
+            <TableHead>Jogo / Descrição</TableHead>
+            <TableHead className="text-center">Mercado</TableHead>
             <TableHead className="text-center">Apostei</TableHead>
             <TableHead className="text-center">Modelo</TableHead>
             <TableHead className="text-center">Odd</TableHead>
@@ -58,13 +75,27 @@ export function BetsTable({ bets }: Props) {
         </TableHeader>
         <TableBody>
           {bets.map((bet) => {
+            const isCombo = (bet as any).is_combo
+            const market: string = (bet as any).market ?? 'result'
+            const comboDesc: string | null = (bet as any).combo_description ?? null
+
             const pl =
               bet.status === 'won'
                 ? bet.stake * bet.odd - bet.stake
                 : bet.status === 'lost'
                 ? -bet.stake
                 : null
-            const matchesPick = bet.bet_outcome === bet.model_pick
+
+            const matchesPick = market === 'result' && bet.bet_outcome === bet.model_pick
+
+            // Linha do jogo
+            const matchLine = isCombo
+              ? (comboDesc ?? 'Múltipla')
+              : bet.matches
+              ? `${bet.matches.home_team?.name} x ${bet.matches.away_team?.name}`
+              : '—'
+
+            const dateLine = bet.matches?.match_date ?? (bet as any).created_at
 
             return (
               <TableRow
@@ -75,28 +106,34 @@ export function BetsTable({ bets }: Props) {
                 )}
               >
                 <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                  {formatDate(bet.matches?.match_date ?? bet.created_at)}
+                  {formatDate(dateLine)}
                 </TableCell>
-                <TableCell className="text-sm">
-                  <span className="font-medium">{bet.matches?.home_team?.name}</span>
-                  <span className="text-muted-foreground mx-1">x</span>
-                  <span>{bet.matches?.away_team?.name}</span>
+                <TableCell className="text-sm max-w-[200px]">
+                  <span className={cn('truncate block', isCombo && 'text-xs text-muted-foreground')}>
+                    {matchLine}
+                  </span>
                 </TableCell>
                 <TableCell className="text-center">
-                  <Badge variant="outline" className="text-xs">
-                    {OUTCOME_LABELS[bet.bet_outcome]}
+                  <Badge variant="outline" className="text-[10px]">
+                    {MARKET_LABELS[market] ?? market}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-center">
-                  <span
-                    className={cn(
-                      'text-xs font-medium',
-                      matchesPick ? 'text-emerald-400' : 'text-orange-400',
-                    )}
-                  >
-                    {bet.model_pick ? OUTCOME_LABELS[bet.model_pick] : '—'}
-                    {matchesPick ? ' ✓' : ' ✗'}
-                  </span>
+                  <Badge variant="outline" className="text-xs">
+                    {OUTCOME_LABELS[bet.bet_outcome] ?? bet.bet_outcome}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-center">
+                  {market === 'result' ? (
+                    <span className={cn('text-xs font-medium', matchesPick ? 'text-emerald-400' : 'text-orange-400')}>
+                      {bet.model_pick ? (OUTCOME_LABELS[bet.model_pick] ?? bet.model_pick) : '—'}
+                      {bet.model_pick ? (matchesPick ? ' ✓' : ' ✗') : ''}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">
+                      {bet.model_prob != null ? `${Math.round(bet.model_prob * 100)}%` : '—'}
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell className="text-center text-sm tabular-nums">
                   {Number(bet.odd).toFixed(2)}
