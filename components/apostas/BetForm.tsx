@@ -526,9 +526,8 @@ export function BetForm({ fixtures }: Props) {
               </p>
             )}
 
-            {/* Odd + Stake da múltipla */}
-            {legs.length >= 2 && (
-              <div className="grid grid-cols-2 gap-4">
+            {/* Odd + Stake da múltipla — sempre visível */}
+            <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">
                     Odd da Múltipla
@@ -566,8 +565,7 @@ export function BetForm({ fixtures }: Props) {
                     className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
-              </div>
-            )}
+            </div>
 
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
