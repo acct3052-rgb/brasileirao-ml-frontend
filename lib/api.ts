@@ -118,8 +118,8 @@ export async function getMarketOdds(): Promise<{ odds: MarketOdds[]; count: numb
 
 // ── Retreinamento ─────────────────────────────────────────────────────────────
 
-export async function startRetrain(token: string): Promise<{ status: string } | null> {
-  return apiPost<{ status: string }>('/api/retrain', undefined, token)
+export async function startRetrain(token: string, league = 'BSA'): Promise<{ status: string } | null> {
+  return apiPost<{ status: string }>(`/api/retrain?league=${league}`, undefined, token)
 }
 
 export async function getRetrainStatus(token: string): Promise<TrainingStatus | null> {

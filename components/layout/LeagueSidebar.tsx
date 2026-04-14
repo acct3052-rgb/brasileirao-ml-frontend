@@ -1,6 +1,7 @@
 'use client'
 
 import { useLeague, LeagueMeta } from '@/lib/league-context'
+import { SetupLeagueButton } from '@/components/admin/RetrainButton'
 import { cn } from '@/lib/utils'
 
 // Ligas definidas no cliente — sincronizado com LEAGUES_META do backend
@@ -31,7 +32,15 @@ export function LeagueSidebar() {
       </p>
 
       {active.map((l) => (
-        <LeagueItem key={l.code} league={l} selected={league === l.code} onSelect={setLeague} />
+        <div key={l.code}>
+          <LeagueItem league={l} selected={league === l.code} onSelect={setLeague} />
+          {/* Botão setup aparece quando a liga está ativa mas sem modelo */}
+          {league === l.code && !l.has_model && (
+            <div className="px-2 mt-1 mb-1">
+              <SetupLeagueButton league={l.code} />
+            </div>
+          )}
+        </div>
       ))}
 
       {inactive.length > 0 && (
