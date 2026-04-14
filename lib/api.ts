@@ -53,6 +53,10 @@ export async function getFixtures(limit = 50): Promise<FixturesResponse | null> 
   return apiFetch<FixturesResponse>(`/api/fixtures?limit=${limit}`)
 }
 
+export async function getCurrentRoundFixtures(): Promise<FixturesResponse | null> {
+  return apiFetch<FixturesResponse>('/api/fixtures/current-round')
+}
+
 export async function getAccuracy(): Promise<AccuracyResponse | null> {
   return apiFetch<AccuracyResponse>('/api/accuracy')
 }

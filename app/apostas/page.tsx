@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { getBets, getBetMetrics, getFixtures } from '@/lib/api'
+import { getBets, getBetMetrics, getCurrentRoundFixtures } from '@/lib/api'
 import { BetsMetrics } from '@/components/apostas/BetsMetrics'
 import { BetsTable } from '@/components/apostas/BetsTable'
 import { BetForm } from '@/components/apostas/BetForm'
@@ -11,7 +11,7 @@ async function ApostasContent() {
   const [betsRes, metrics, fixturesRes] = await Promise.all([
     getBets(),
     getBetMetrics(),
-    getFixtures(100),
+    getCurrentRoundFixtures(),
   ])
 
   const bets = betsRes?.bets ?? []
