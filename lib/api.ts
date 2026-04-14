@@ -49,22 +49,23 @@ async function apiDelete(path: string): Promise<boolean> {
 
 // ── Fixtures & Accuracy ───────────────────────────────────────────────────────
 
-export async function getFixtures(limit = 50): Promise<FixturesResponse | null> {
-  return apiFetch<FixturesResponse>(`/api/fixtures?limit=${limit}`)
+export async function getFixtures(limit = 50, league = 'BSA'): Promise<FixturesResponse | null> {
+  return apiFetch<FixturesResponse>(`/api/fixtures?limit=${limit}&league=${league}`)
 }
 
-export async function getCurrentRoundFixtures(): Promise<FixturesResponse | null> {
-  return apiFetch<FixturesResponse>('/api/fixtures/current-round')
+export async function getCurrentRoundFixtures(league = 'BSA'): Promise<FixturesResponse | null> {
+  return apiFetch<FixturesResponse>(`/api/fixtures/current-round?league=${league}`)
 }
 
-export async function getAccuracy(): Promise<AccuracyResponse | null> {
-  return apiFetch<AccuracyResponse>('/api/accuracy')
+export async function getAccuracy(league = 'BSA'): Promise<AccuracyResponse | null> {
+  return apiFetch<AccuracyResponse>(`/api/accuracy?league=${league}`)
 }
 
 export async function getRecentPredictions(
   limit = 100,
+  league = 'BSA',
 ): Promise<RecentPredictionsResponse | null> {
-  return apiFetch<RecentPredictionsResponse>(`/api/predictions/recent?limit=${limit}`)
+  return apiFetch<RecentPredictionsResponse>(`/api/predictions/recent?limit=${limit}&league=${league}`)
 }
 
 // ── Odds de mercado ───────────────────────────────────────────────────────────

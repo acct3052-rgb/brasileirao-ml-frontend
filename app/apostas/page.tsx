@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { getBets, getBetMetrics, getCurrentRoundFixtures } from '@/lib/api'
+import { getLeague } from '@/lib/get-league'
 import { BetsMetrics } from '@/components/apostas/BetsMetrics'
 import { BetsTable } from '@/components/apostas/BetsTable'
 import { BetForm } from '@/components/apostas/BetForm'
@@ -8,10 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 
 async function ApostasContent() {
+  const league = await getLeague()
   const [betsRes, metrics, fixturesRes] = await Promise.all([
     getBets(),
     getBetMetrics(),
-    getCurrentRoundFixtures(),
+    getCurrentRoundFixtures(league),
   ])
 
   const bets = betsRes?.bets ?? []

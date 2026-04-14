@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { getAccuracy, getRecentPredictions } from '@/lib/api'
+import { getLeague } from '@/lib/get-league'
 import { AccuracyChart } from '@/components/historico/AccuracyChart'
 import { AccuracyByResultCards } from '@/components/historico/AccuracyByResultCards'
 import { PredictionsTable } from '@/components/historico/PredictionsTable'
@@ -10,22 +11,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ApiOfflineBanner } from '@/components/layout/ApiOfflineBanner'
 
 interface PageProps {
-  searchParams: { season?: string }
+  searchParams: Promise<{ season?: string }>
 }
 
-async function HistoricoContent({ season }: { season?: string }) {
+async function HistoricoContent({ season, league }: { season?: string; league: string }) {
   const [accuracy, predsRes] = await Promise.all([
-    getAccuracy(),
-    getRecentPredictions(200),
+    getAccuracy(league),
+    getRecentPredictions(200, league),
   ])
 
   const allPredictions = predsRes?.predictions ?? []
   const apiOffline = accuracy === null && predsRes === null
 
   const predictions = season
-    ? allPredictions.filter((p) =>
-        p.matches?.match_date?.startsWith(season),
-      )
+    ? allPredictions.filter((p) => p.matches?.match_date?.startsWith(season))
     : allPredictions
 
   const withResult = predictions.filter((p) => p.actual_result !== null)
@@ -34,20 +33,17 @@ async function HistoricoContent({ season }: { season?: string }) {
     <>
       {apiOffline && <ApiOfflineBanner />}
 
-      {/* Cards acurácia por tipo */}
       <AccuracyByResultCards predictions={withResult} />
 
-      {/* Acurácia por rodada */}
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="text-base">Acertos por Rodada</CardTitle>
         </CardHeader>
         <CardContent>
-          <RoundAccuracy />
+          <RoundAccuracy league={league} />
         </CardContent>
       </Card>
 
-      {/* Gráfico */}
       <Card className="mt-6">
         <CardHeader>
           <CardTitle className="text-base">Acurácia por Rodada</CardTitle>
@@ -57,7 +53,6 @@ async function HistoricoContent({ season }: { season?: string }) {
         </CardContent>
       </Card>
 
-      {/* Tabela */}
       <section className="mt-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">
@@ -74,8 +69,9 @@ async function HistoricoContent({ season }: { season?: string }) {
   )
 }
 
-export default function HistoricoPage({ searchParams }: PageProps) {
-  const season = searchParams.season
+export default async function HistoricoPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const league = await getLeague()
 
   return (
     <div className="space-y-6">
@@ -98,7 +94,7 @@ export default function HistoricoPage({ searchParams }: PageProps) {
           </div>
         }
       >
-        <HistoricoContent season={season} />
+        <HistoricoContent season={params.season} league={league} />
       </Suspense>
     </div>
   )

@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { getFixtures, getAccuracy } from '@/lib/api'
+import { getLeague } from '@/lib/get-league'
 import { MetricCards } from '@/components/dashboard/MetricCards'
 import { FixturesWithLineups } from '@/components/dashboard/FixturesWithLineups'
 import { MetricCardsSkeleton } from '@/components/dashboard/MetricCardsSkeleton'
@@ -7,7 +8,11 @@ import { FixturesTableSkeleton } from '@/components/dashboard/FixturesTableSkele
 import { ApiOfflineBanner } from '@/components/layout/ApiOfflineBanner'
 
 async function DashboardContent() {
-  const [fixturesRes, accuracy] = await Promise.all([getFixtures(), getAccuracy()])
+  const league = await getLeague()
+  const [fixturesRes, accuracy] = await Promise.all([
+    getFixtures(50, league),
+    getAccuracy(league),
+  ])
 
   const fixtures = fixturesRes?.fixtures ?? []
   const apiOffline = fixturesRes === null && accuracy === null
@@ -35,7 +40,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Predições do Campeonato Brasileiro Série A
+          Predições com Machine Learning
         </p>
       </div>
       <Suspense

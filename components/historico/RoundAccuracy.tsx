@@ -141,7 +141,7 @@ function RoundDetail({ season, matchday }: { season: number; matchday: number })
   )
 }
 
-export function RoundAccuracy() {
+export function RoundAccuracy({ league = 'BSA' }: { league?: string }) {
   const [rounds, setRounds] = useState<RoundStat[]>([])
   const [loading, setLoading] = useState(true)
   const [season, setSeason] = useState<number | 'all'>('all')
@@ -149,14 +149,13 @@ export function RoundAccuracy() {
 
   useEffect(() => {
     setLoading(true)
-    const url = season === 'all'
-      ? `${API_BASE}/api/accuracy/by-round`
-      : `${API_BASE}/api/accuracy/by-round?season=${season}`
+    const base = `${API_BASE}/api/accuracy/by-round?league=${league}`
+    const url = season === 'all' ? base : `${base}&season=${season}`
     fetch(url, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setRounds(d.rounds) })
       .finally(() => setLoading(false))
-  }, [season])
+  }, [season, league])
 
   const toggle = (key: string) => {
     setExpanded(prev => {
