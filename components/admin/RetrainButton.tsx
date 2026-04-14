@@ -78,6 +78,47 @@ export function RetrainButton() {
   )
 }
 
+// ── Gerar predições históricas ────────────────────────────────────────────────
+
+export function PredictAllButton({ league }: { league: string }) {
+  const [status, setStatus] = useState<'idle' | 'running' | 'done' | 'error'>('idle')
+  const [count, setCount]   = useState<number | null>(null)
+
+  const handleClick = async () => {
+    setStatus('running')
+    try {
+      const res = await fetch(`${API_BASE}/api/predict/all?league=${league}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
+        cache: 'no-store',
+      })
+      if (!res.ok) { setStatus('error'); return }
+      const data = await res.json()
+      setCount(data.predicted)
+      setStatus('done')
+      setTimeout(() => setStatus('idle'), 8000)
+    } catch { setStatus('error') }
+  }
+
+  return (
+    <Button
+      size="sm" variant="outline" onClick={handleClick}
+      disabled={status === 'running'}
+      className={cn(
+        'text-xs gap-1.5',
+        status === 'done'  && 'border-emerald-500/40 text-emerald-400',
+        status === 'error' && 'border-red-500/40 text-red-400',
+      )}
+    >
+      {status === 'running' ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+      {status === 'idle'    && 'Gerar Histórico'}
+      {status === 'running' && 'Gerando...'}
+      {status === 'done'    && `${count} predições geradas`}
+      {status === 'error'   && 'Erro'}
+    </Button>
+  )
+}
+
 // ── Setup de liga nova (coleta + features + treino) ───────────────────────────
 
 export function SetupLeagueButton({ league }: { league: string }) {
