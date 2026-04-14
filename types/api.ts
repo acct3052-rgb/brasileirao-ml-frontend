@@ -98,11 +98,14 @@ export interface BetsResponse {
 }
 
 export interface BetCreate {
-  match_id: number
-  bet_outcome: 'H' | 'D' | 'A'
+  match_id?: number
+  bet_outcome: string
   odd: number
   stake: number
   notes?: string
+  market?: string
+  is_combo?: boolean
+  combo_description?: string
 }
 
 export interface BetMetrics {

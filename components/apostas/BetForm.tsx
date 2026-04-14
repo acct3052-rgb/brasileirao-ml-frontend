@@ -175,7 +175,7 @@ export function BetForm({ fixtures }: Props) {
       notes: notes || undefined,
       market,
       is_combo: false,
-    } as Parameters<typeof createBet>[0])
+    })
     setLoading(false)
     resetForm()
     router.refresh()
@@ -195,7 +195,7 @@ export function BetForm({ fixtures }: Props) {
       market: 'combo',
       is_combo: true,
       combo_description: desc,
-    } as Parameters<typeof createBet>[0])
+    })
     setLoading(false)
     resetForm()
     router.refresh()
