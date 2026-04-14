@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ApiOfflineBanner } from '@/components/layout/ApiOfflineBanner'
 
 interface PageProps {
-  searchParams: Promise<{ season?: string }>
+  searchParams: Promise<{ season?: string; league?: string }>
 }
 
 async function HistoricoContent({ season, league }: { season?: string; league: string }) {
@@ -71,7 +71,7 @@ async function HistoricoContent({ season, league }: { season?: string; league: s
 
 export default async function HistoricoPage({ searchParams }: PageProps) {
   const params = await searchParams
-  const league = await getLeague()
+  const league = params.league ?? await getLeague()
 
   return (
     <div className="space-y-6">

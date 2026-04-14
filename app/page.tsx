@@ -7,8 +7,11 @@ import { MetricCardsSkeleton } from '@/components/dashboard/MetricCardsSkeleton'
 import { FixturesTableSkeleton } from '@/components/dashboard/FixturesTableSkeleton'
 import { ApiOfflineBanner } from '@/components/layout/ApiOfflineBanner'
 
-async function DashboardContent() {
-  const league = await getLeague()
+interface PageProps {
+  searchParams: Promise<{ league?: string }>
+}
+
+async function DashboardContent({ league }: { league: string }) {
   const [fixturesRes, accuracy] = await Promise.all([
     getFixtures(50, league),
     getAccuracy(league),
@@ -34,7 +37,10 @@ async function DashboardContent() {
   )
 }
 
-export default function DashboardPage() {
+export default async function DashboardPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const league = params.league ?? await getLeague()
+
   return (
     <div className="space-y-6">
       <div>
@@ -51,7 +57,7 @@ export default function DashboardPage() {
           </div>
         }
       >
-        <DashboardContent />
+        <DashboardContent league={league} />
       </Suspense>
     </div>
   )

@@ -8,8 +8,7 @@ import { BankrollSimulator } from '@/components/apostas/BankrollSimulator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 
-async function ApostasContent() {
-  const league = await getLeague()
+async function ApostasContent({ league }: { league: string }) {
   const [betsRes, metrics, fixturesRes] = await Promise.all([
     getBets(),
     getBetMetrics(),
@@ -64,7 +63,14 @@ async function ApostasContent() {
   )
 }
 
-export default function ApostasPage() {
+interface PageProps {
+  searchParams: Promise<{ league?: string }>
+}
+
+export default async function ApostasPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const league = params.league ?? await getLeague()
+
   return (
     <div className="space-y-6">
       <div>
@@ -84,7 +90,7 @@ export default function ApostasPage() {
           </div>
         }
       >
-        <ApostasContent />
+        <ApostasContent league={league} />
       </Suspense>
     </div>
   )

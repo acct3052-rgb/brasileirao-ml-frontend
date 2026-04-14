@@ -6,8 +6,9 @@ import { cn } from '@/lib/utils'
 import { BarChart3 } from 'lucide-react'
 import { RetrainButton } from '@/components/admin/RetrainButton'
 import { SyncResultsButton } from '@/components/admin/SyncResultsButton'
+import { useLeague } from '@/lib/league-context'
 
-const links = [
+const NAV_LINKS = [
   { href: '/', label: 'Dashboard' },
   { href: '/historico', label: 'Histórico' },
   { href: '/value-bets', label: 'Value Bets' },
@@ -17,6 +18,7 @@ const links = [
 
 export function Navbar() {
   const pathname = usePathname()
+  const { league } = useLeague()
 
   return (
     <header className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-40">
@@ -26,20 +28,24 @@ export function Navbar() {
           <span>Brasileirão ML</span>
         </div>
         <nav className="flex gap-1 flex-1">
-          {links.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-                pathname === href
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-              )}
-            >
-              {label}
-            </Link>
-          ))}
+          {NAV_LINKS.map(({ href, label }) => {
+            const hrefWithLeague = href === '/' ? `/?league=${league}` : `${href}?league=${league}`
+            const isActive = pathname === href
+            return (
+              <Link
+                key={href}
+                href={hrefWithLeague}
+                className={cn(
+                  'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                )}
+              >
+                {label}
+              </Link>
+            )
+          })}
         </nav>
         <SyncResultsButton />
         <RetrainButton />
