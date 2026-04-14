@@ -1,11 +1,14 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useLeague, LeagueMeta } from '@/lib/league-context'
 import { SetupLeagueButton, PredictAllButton } from '@/components/admin/RetrainButton'
 import { cn } from '@/lib/utils'
 
-// Ligas definidas no cliente — sincronizado com LEAGUES_META do backend
-const ALL_LEAGUES: LeagueMeta[] = [
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+
+// Fallback estático — usado até a API responder
+const DEFAULT_LEAGUES: LeagueMeta[] = [
   { code: 'BSA', name: 'Brasileirão Série A', flag: '🇧🇷', active: true,  has_model: true  },
   { code: 'BSB', name: 'Brasileirão Série B', flag: '🇧🇷', active: false, has_model: false },
   { code: 'PL',  name: 'Premier League',      flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', active: true,  has_model: false },
@@ -21,9 +24,19 @@ const ALL_LEAGUES: LeagueMeta[] = [
 
 export function LeagueSidebar() {
   const { league, setLeague } = useLeague()
+  const [leagues, setLeagues] = useState<LeagueMeta[]>(DEFAULT_LEAGUES)
 
-  const active   = ALL_LEAGUES.filter((l) => l.active)
-  const inactive = ALL_LEAGUES.filter((l) => !l.active)
+  useEffect(() => {
+    fetch(`${API_BASE}/api/leagues`, { cache: 'no-store' })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.leagues) setLeagues(data.leagues)
+      })
+      .catch(() => {/* mantém fallback */})
+  }, [])
+
+  const active   = leagues.filter((l) => l.active)
+  const inactive = leagues.filter((l) => !l.active)
 
   return (
     <aside className="w-56 flex-shrink-0 hidden lg:flex flex-col gap-1 pt-1">
@@ -40,7 +53,7 @@ export function LeagueSidebar() {
               <SetupLeagueButton league={l.code} />
             </div>
           )}
-          {/* Botão para gerar histórico quando liga tem modelo mas pode faltar predições */}
+          {/* Botão para gerar histórico quando liga tem modelo */}
           {league === l.code && l.has_model && (
             <div className="px-2 mt-1 mb-1">
               <PredictAllButton league={l.code} />
