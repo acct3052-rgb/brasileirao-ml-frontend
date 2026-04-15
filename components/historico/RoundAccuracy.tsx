@@ -55,16 +55,16 @@ function AccuracyBar({ pct }: { pct: number }) {
   )
 }
 
-function RoundDetail({ season, matchday }: { season: number; matchday: number }) {
+function RoundDetail({ season, matchday, league }: { season: number; matchday: number; league: string }) {
   const [games, setGames] = useState<GameDetail[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/accuracy/by-round/${season}/${matchday}`)
+    fetch(`${API_BASE}/api/accuracy/by-round/${season}/${matchday}?league=${league}`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d) setGames(d.games) })
       .finally(() => setLoading(false))
-  }, [season, matchday])
+  }, [season, matchday, league])
 
   if (loading) return (
     <div className="px-4 py-3 space-y-2">
@@ -283,7 +283,7 @@ export function RoundAccuracy({ league = 'BSA' }: { league?: string }) {
                 </tbody>
               </table>
 
-              {isOpen && <RoundDetail season={r.season} matchday={r.matchday} />}
+              {isOpen && <RoundDetail season={r.season} matchday={r.matchday} league={league} />}
             </div>
           )
         })}

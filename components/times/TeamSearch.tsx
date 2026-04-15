@@ -6,9 +6,10 @@ import { cn } from '@/lib/utils'
 
 interface Props {
   teams: { id: number; name: string }[]
+  league?: string
 }
 
-export function TeamSearch({ teams }: Props) {
+export function TeamSearch({ teams, league = 'BSA' }: Props) {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<string | null>(null)
 
@@ -62,7 +63,7 @@ export function TeamSearch({ teams }: Props) {
             </button>
             <h2 className="text-lg font-semibold">{selected}</h2>
           </div>
-          <TeamProfile teamName={selected} />
+          <TeamProfile teamName={selected} league={league} />
         </div>
       )}
     </div>

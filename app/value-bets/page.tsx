@@ -1,14 +1,19 @@
 import { Suspense } from 'react'
 import { getFixtures, getMarketOdds } from '@/lib/api'
+import { getLeague } from '@/lib/get-league'
 import { ValueBetsTable } from '@/components/value-bets/ValueBetsTable'
 import { GoalsOddsTable } from '@/components/value-bets/GoalsOddsTable'
 import { RoundCoupon } from '@/components/value-bets/RoundCoupon'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 
-async function ValueBetsContent() {
+interface PageProps {
+  searchParams: Promise<{ league?: string }>
+}
+
+async function ValueBetsContent({ league }: { league: string }) {
   const [fixturesRes, oddsRes] = await Promise.all([
-    getFixtures(100),
+    getFixtures(100, league),
     getMarketOdds(),
   ])
 
@@ -43,7 +48,10 @@ async function ValueBetsContent() {
   )
 }
 
-export default function ValueBetsPage() {
+export default async function ValueBetsPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const league = params.league ?? await getLeague()
+
   return (
     <div className="space-y-6">
       <div>
@@ -61,7 +69,7 @@ export default function ValueBetsPage() {
           </div>
         }
       >
-        <ValueBetsContent />
+        <ValueBetsContent league={league} />
       </Suspense>
     </div>
   )

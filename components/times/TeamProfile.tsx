@@ -119,7 +119,7 @@ function StatsRow({ label, stats }: { label: string; stats: Stats }) {
   )
 }
 
-export function TeamProfile({ teamName }: { teamName: string }) {
+export function TeamProfile({ teamName, league = 'BSA' }: { teamName: string; league?: string }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -127,12 +127,12 @@ export function TeamProfile({ teamName }: { teamName: string }) {
   useEffect(() => {
     setLoading(true)
     setError(false)
-    fetch(`${API_BASE}/api/teams/${encodeURIComponent(teamName)}/profile`, { cache: 'no-store' })
+    fetch(`${API_BASE}/api/teams/${encodeURIComponent(teamName)}/profile?league=${league}`, { cache: 'no-store' })
       .then((r) => r.ok ? r.json() : Promise.reject(r.status))
       .then(setProfile)
       .catch(() => setError(true))
       .finally(() => setLoading(false))
-  }, [teamName])
+  }, [teamName, league])
 
   if (loading) {
     return (
