@@ -14,7 +14,7 @@ interface PageProps {
 async function ValueBetsContent({ league }: { league: string }) {
   const [fixturesRes, oddsRes] = await Promise.all([
     getFixtures(100, league),
-    getMarketOdds(),
+    getMarketOdds(league),
   ])
 
   const fixtures = fixturesRes?.fixtures ?? []

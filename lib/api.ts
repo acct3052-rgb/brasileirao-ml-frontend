@@ -112,8 +112,8 @@ export interface MarketOdds {
   fair_no_btts: number | null
 }
 
-export async function getMarketOdds(): Promise<{ odds: MarketOdds[]; count: number } | null> {
-  return apiFetch('/api/odds')
+export async function getMarketOdds(league = 'BSA'): Promise<{ odds: MarketOdds[]; count: number } | null> {
+  return apiFetch(`/api/odds?league=${league}`)
 }
 
 // ── Retreinamento ─────────────────────────────────────────────────────────────
