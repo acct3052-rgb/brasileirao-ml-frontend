@@ -39,8 +39,10 @@ export function LeagueProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('selected_league', code)
     // Salva em cookie para Server Components lerem
     document.cookie = `league=${code}; path=/; max-age=31536000`
-    // Recarrega para buscar dados da nova liga
-    window.location.reload()
+    // Atualiza a URL com ?league=X e recarrega para Server Components
+    const url = new URL(window.location.href)
+    url.searchParams.set('league', code)
+    window.location.href = url.toString()
   }
 
   return (
