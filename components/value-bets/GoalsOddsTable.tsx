@@ -81,14 +81,20 @@ export function GoalsOddsTable({ marketOdds }: Props) {
       activeMarket === 'btts'    ? o.fair_btts :
       activeMarket === 'no_btts' ? o.fair_no_btts : null
 
-    // Odd de mercado disponível (só over25/under25 vêm da API)
+    // Odd de mercado disponível
     const defaultMarketOdd =
+      activeMarket === 'over15'  ? o.odd_over15_market :
       activeMarket === 'over25'  ? o.odd_over25_market :
-      activeMarket === 'under25' ? o.odd_under25_market : null
+      activeMarket === 'under25' ? o.odd_under25_market :
+      activeMarket === 'btts'    ? o.odd_btts_yes :
+      activeMarket === 'no_btts' ? o.odd_btts_no : null
 
     const marketBk =
+      activeMarket === 'over15'  ? o.best_over15_bk :
       activeMarket === 'over25'  ? o.best_over25_bk :
-      activeMarket === 'under25' ? o.best_under25_bk : null
+      activeMarket === 'under25' ? o.best_under25_bk :
+      activeMarket === 'btts'    ? o.best_btts_yes_bk :
+      activeMarket === 'no_btts' ? o.best_btts_no_bk : null
 
     const key = `${o.home_team}_${o.away_team}_${activeMarket}`
     const effectiveOdd = customOdds[key] ?? defaultMarketOdd ?? null
@@ -133,9 +139,9 @@ export function GoalsOddsTable({ marketOdds }: Props) {
         </div>
       </div>
 
-      {(activeMarket === 'over15' || activeMarket === 'btts' || activeMarket === 'no_btts') && (
+      {activeMarket === 'no_btts' && (
         <p className="text-xs text-muted-foreground bg-muted/30 rounded px-3 py-2">
-          Odds de mercado não disponíveis para este mercado via API. Insira manualmente para calcular value.
+          Odds de mercado para &quot;Não Ambos&quot; não disponíveis via API. Insira manualmente para calcular value.
         </p>
       )}
 
@@ -150,9 +156,7 @@ export function GoalsOddsTable({ marketOdds }: Props) {
               <TableHead className="text-center">Odd Justa</TableHead>
               <TableHead className="text-center">
                 Odd Mercado
-                {(activeMarket === 'over25' || activeMarket === 'under25') && (
-                  <span className="text-[10px] text-muted-foreground ml-1">(editável)</span>
-                )}
+                <span className="text-[10px] text-muted-foreground ml-1">(editável)</span>
               </TableHead>
               <TableHead className="text-center">Valor Esp.</TableHead>
               <TableHead className="text-center">Sinal</TableHead>

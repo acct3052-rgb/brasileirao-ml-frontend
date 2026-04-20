@@ -91,15 +91,27 @@ export interface MarketOdds {
   best_home_bk: string | null
   best_draw_bk: string | null
   best_away_bk: string | null
-  // Totals de mercado
+  // Totals de mercado (Over/Under 2.5)
   totals_bookmaker: string | null
   odd_over25_market: number | null
   odd_under25_market: number | null
   best_over25_bk: string | null
   best_under25_bk: string | null
+  // Over/Under 1.5 de mercado
+  odd_over15_market: number | null
+  odd_under15_market: number | null
+  best_over15_bk: string | null
+  best_under15_bk: string | null
+  // BTTS de mercado
+  odd_btts_yes: number | null
+  odd_btts_no: number | null
+  best_btts_yes_bk: string | null
+  best_btts_no_bk: string | null
   // Todas as casas disponíveis
   all_h2h_odds: BookmakerOdds[]
   all_totals_odds: BookmakerOdds[]
+  all_over15_odds: BookmakerOdds[]
+  all_btts_odds: BookmakerOdds[]
   // Modelo Poisson
   model_over15: number | null
   model_over25: number | null
@@ -114,6 +126,64 @@ export interface MarketOdds {
 
 export async function getMarketOdds(league = 'BSA'): Promise<{ odds: MarketOdds[]; count: number } | null> {
   return apiFetch(`/api/odds?league=${league}`)
+}
+
+// ── Goals Picks & Accuracy ───────────────────────────────────────────────────
+
+export interface GoalPick {
+  match: string
+  match_id: number
+  match_date: string
+  matchday: number
+  market: string
+  prob: number
+  fair_odd: number
+  market_odd: number | null
+  ev: number | null
+  grade: string
+  xg_total: number
+  xg_home: number
+  xg_away: number
+}
+
+export interface GoalsPicksResponse {
+  picks: GoalPick[]
+  round: number | null
+  league: string
+  summary: {
+    total_picks: number
+    by_market: Record<string, number>
+    value_bets: number
+  }
+}
+
+export interface GoalsBand {
+  total: number
+  correct: number
+  hit_rate: number
+}
+
+export interface GoalsMarketAccuracy {
+  total: number
+  correct: number
+  hit_rate: number
+  bands: Record<string, GoalsBand>
+}
+
+export interface GoalsAccuracyResponse {
+  league: string
+  season: number
+  total_matches: number
+  markets: Record<string, GoalsMarketAccuracy>
+}
+
+export async function getGoalsPicks(league = 'BSA'): Promise<GoalsPicksResponse | null> {
+  return apiFetch<GoalsPicksResponse>(`/api/goals-picks?league=${league}`)
+}
+
+export async function getGoalsAccuracy(league = 'BSA', season?: number): Promise<GoalsAccuracyResponse | null> {
+  const params = season ? `?league=${league}&season=${season}` : `?league=${league}`
+  return apiFetch<GoalsAccuracyResponse>(`/api/goals-accuracy${params}`)
 }
 
 // ── Retreinamento ─────────────────────────────────────────────────────────────
