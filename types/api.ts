@@ -17,6 +17,7 @@ export interface Fixture {
   expected_goals_away?: number
   over_15_prob?: number
   over_25_prob: number
+  btts_prob?: number
 }
 
 export interface FixturesResponse {

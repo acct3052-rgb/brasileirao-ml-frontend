@@ -39,7 +39,7 @@ async function ValueBetsContent({ league }: { league: string }) {
       <TabsContent value="gols">
         <div className="space-y-2 mb-4">
           <p className="text-sm text-muted-foreground">
-            Over 1.5 e Ambos Marcam calculados pelo modelo Poisson · Over 2.5 com odd real de mercado
+            Over 1.5, Over 2.5 e Ambos Marcam com odds reais de mercado e probabilidade do modelo Poisson
           </p>
         </div>
         <GoalsOddsTable marketOdds={marketOdds} />
